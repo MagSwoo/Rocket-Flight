@@ -58,7 +58,19 @@ public class PartSelector {
                     new AttachmentPoint(new Vector2(2.0f, 1.0f), 2),
                     new AttachmentPoint(new Vector2(1.0f, 0.0f), 3),
                     new AttachmentPoint(new Vector2(0.0f, 1.0f), 4)
-                }), 9*2000));
+                }), 9f));
+        fuelTanks.add(new FuelTank("Half Fuel Tank", 5, new Vector2(2.0f, 1.0f),
+                new Array<>(new AttachmentPoint[]{
+                        new AttachmentPoint(new Vector2(1.0f, 1.0f), 1),
+                        new AttachmentPoint(new Vector2(1.0f, 0.0f), 3)
+                }), 4.5f));
+        fuelTanks.add(new FuelTank("3-Wide Fuel Tank", 15, new Vector2(3.0f, 2.0f),
+                new Array<>(new AttachmentPoint[]{
+                        new AttachmentPoint(new Vector2(1.5f, 2.0f), 1),
+                        new AttachmentPoint(new Vector2(3.0f, 1.0f), 2),
+                        new AttachmentPoint(new Vector2(1.5f, 0.0f), 3),
+                        new AttachmentPoint(new Vector2(0.0f, 1.0f), 4)
+                }), 13.5f));
 
         // engines
         engines = new Array<>();
@@ -66,7 +78,17 @@ public class PartSelector {
                 new Array<>(new AttachmentPoint[]{
                         new AttachmentPoint(new Vector2(1.0f, 3.0f), 1),
                         new AttachmentPoint(new Vector2(1.0f, 0.0f), 3)
-                }), 120, 240));
+                }), 120, 0.5f));
+        engines.add(new Engine("Strong Engine", 12f, new Vector2(4.0f, 5.0f),
+                new Array<>(new AttachmentPoint[]{
+                        new AttachmentPoint(new Vector2(2.0f, 5.0f), 1),
+                        new AttachmentPoint(new Vector2(2.0f, 0.0f), 3)
+                }), 400, 1.67f));
+        engines.add(new Engine("Weak Engine", 0.5f, new Vector2(2.0f, 1.0f),
+                new Array<>(new AttachmentPoint[]{
+                        new AttachmentPoint(new Vector2(1.0f, 1.0f), 1),
+                        new AttachmentPoint(new Vector2(1.0f, 0.0f), 3)
+                }), 15, 0.04f));
 
         //aerodynamics
         aerodynamics = new Array<>();

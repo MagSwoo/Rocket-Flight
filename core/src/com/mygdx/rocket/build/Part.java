@@ -1,9 +1,11 @@
 package com.mygdx.rocket.build;
 
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.mygdx.rocket.RocketFlight;
 
@@ -13,9 +15,10 @@ public class Part {
     private float mass;
     private Vector2 size;
     private Vector2 location;
+    private Vector2 cosmeticLocation;
     private int rotation;
     private Array<AttachmentPoint> attachmentPoints;
-    //private Rectangle bounds;
+    private Rectangle bounds;
 
 
     public Part(String name, float mass, Vector2 size, Array<AttachmentPoint> attachmentPoints) {
@@ -23,7 +26,6 @@ public class Part {
         this.mass = mass;
         this.size = size;
         this.attachmentPoints = attachmentPoints;
-        //this.bounds = new Rectangle(0, 0, size.x, size.y);
         this.rotation = 1;
         location = new Vector2(RocketFlight.V_WIDTH-400, RocketFlight.V_HEIGHT/2f);
     }
@@ -37,7 +39,6 @@ public class Part {
         for (AttachmentPoint point : part.getAttachmentPoints()) {
             this.attachmentPoints.add(new AttachmentPoint(point));
         }
-        //this.bounds = new Rectangle(0, 0, part.size.x, part.size.y);
         this.rotation = 0 + part.rotation;
         this.location = new Vector2(part.location);
     }
@@ -88,6 +89,8 @@ public class Part {
 
     public void setLocation(Vector2 location) {
         this.location = new Vector2(location);
+        bounds = getBounds();
+        this.cosmeticLocation = new Vector2(location);
     }
 
     public void flipHorizontal() {
@@ -129,5 +132,53 @@ public class Part {
 
     public void setAttachmentPoints(Array<AttachmentPoint> attachmentPoints) {
         this.attachmentPoints = attachmentPoints;
+    }
+
+    public Rectangle getBounds() {
+        return new Rectangle(location.x, location.y, size.x * 40, size.y * 40);
+    }
+    public Rectangle getBounds(Camera camera) {
+        Vector3 position = new Vector3(location.x, location.y, 0);
+        camera.project(position);
+        return new Rectangle(position.x, position.y, size.x * 40, size.y * 40);
+    }
+
+    public boolean overlaps(Part other) {
+        return bounds.overlaps(other.bounds);
+    }
+
+    public float getOverlapArea(Rectangle a, Rectangle b) {
+        float overlapWidth = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+        float overlapHeight = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+
+        return overlapWidth * overlapHeight;
+    }
+
+    public float overlapArea(Part other) {
+        return getOverlapArea(this.bounds, other.getBounds());
+    }
+
+    public void move(Vector2 velocity) {
+        location.x += velocity.x;
+        location.y += velocity.y;
+        for (AttachmentPoint point : attachmentPoints) {
+            point.getLocation().x += velocity.x;
+            point.getLocation().y += velocity.y;
+        }
+    }
+
+    public Vector2 getCenter() {
+        if(rotation == 1 || rotation == 3) {
+            return new Vector2(location.x + size.x, location.y + size.y);
+        } else {
+            return new Vector2(location.x + size.y, location.y + size.x);
+        }
+    }
+
+    public void setCosmeticLocation(Vector2 location) {
+        cosmeticLocation = location;
+    }
+    public Vector2 getCosmeticLocation() {
+        return cosmeticLocation;
     }
 }

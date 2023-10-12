@@ -6,6 +6,7 @@ import com.mygdx.rocket.build.AttachmentPoint;
 import com.mygdx.rocket.build.Engine;
 import com.mygdx.rocket.build.FuelTank;
 import com.mygdx.rocket.build.Part;
+import com.mygdx.rocket.screens.BuildScreen;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,64 +17,68 @@ import java.util.Scanner;
 public class Saves {
 
     public static void encode(Rocket rocket) throws IOException{
-        File myFile = new File("C:\\Program Files\\Rocket Flight Game\\assets\\saves\\" + rocket.getName() + ".txt");
-        try{
-            FileWriter fileWriter = new FileWriter(myFile);
-            // Rocket name
-            fileWriter.write(rocket.getName());
-            // Number of parts
-            fileWriter.write("\n" + rocket.getParts().size);
+        File myFile = new File("C:\\Rocket Flight Game\\assets\\saves\\" + rocket.getName() + ".txt");
+        if(rocket.numParts("capsule") < 1) {
+            BuildScreen.setWarning();
+        } else {
+            try {
+                FileWriter fileWriter = new FileWriter(myFile);
+                // Rocket name
+                fileWriter.write(rocket.getName());
+                // Number of parts
+                fileWriter.write("\n" + rocket.getParts().size);
 
-            // for each part
-            for(Part part : rocket.getParts()) {
-                // part name
-                fileWriter.write("\n" + part.getName());
-                // part type
-                fileWriter.write("\n" + part.getType());
-                // part mass
-                fileWriter.write("\n" + part.getMass());
-                // part size x and y
-                fileWriter.write("\n" + part.getSize().x);
-                fileWriter.write("\n" + part.getSize().y);
-                // part location x and y
-                fileWriter.write("\n" + part.getLocation().x);
-                fileWriter.write("\n" + part.getLocation().y);
-                // rotation
-                fileWriter.write("\n" + part.getRotation());
+                // for each part
+                for (Part part : rocket.getParts()) {
+                    // part name
+                    fileWriter.write("\n" + part.getName());
+                    // part type
+                    fileWriter.write("\n" + part.getType());
+                    // part mass
+                    fileWriter.write("\n" + part.getMass());
+                    // part size x and y
+                    fileWriter.write("\n" + part.getSize().x);
+                    fileWriter.write("\n" + part.getSize().y);
+                    // part location x and y
+                    fileWriter.write("\n" + part.getLocation().x);
+                    fileWriter.write("\n" + part.getLocation().y);
+                    // rotation
+                    fileWriter.write("\n" + part.getRotation());
 
-                // number of attachment points in part
-                fileWriter.write("\n" + part.getAttachmentPoints().size);
+                    // number of attachment points in part
+                    fileWriter.write("\n" + part.getAttachmentPoints().size);
 
-                // each attachment point of array
-                for (AttachmentPoint point : part.getAttachmentPoints()) {
-                    // position
-                    fileWriter.write("\n" + point.getPosition().x);
-                    fileWriter.write("\n" + point.getPosition().y);
-                    // location
-                    fileWriter.write("\n" + point.getLocation().x);
-                    fileWriter.write("\n" + point.getLocation().y);
-                    // direction
-                    fileWriter.write("\n" + point.getDirection());
-                    // is occupied or not
-                    fileWriter.write("\n" + point.isOccupied());
+                    // each attachment point of array
+                    for (AttachmentPoint point : part.getAttachmentPoints()) {
+                        // position
+                        fileWriter.write("\n" + point.getPosition().x);
+                        fileWriter.write("\n" + point.getPosition().y);
+                        // location
+                        fileWriter.write("\n" + point.getLocation().x);
+                        fileWriter.write("\n" + point.getLocation().y);
+                        // direction
+                        fileWriter.write("\n" + point.getDirection());
+                        // is occupied or not
+                        fileWriter.write("\n" + point.isOccupied());
+                    }
+
+                    // fuelCapacity for FUELTANK
+                    if (part instanceof FuelTank) {
+                        FuelTank fuelTank = (FuelTank) part;
+                        fileWriter.write("\n" + fuelTank.getFuelCapacity());
+                    }
+                    //thrust and consumption for ENGINE
+                    if (part instanceof Engine) {
+                        Engine engine = (Engine) part;
+                        fileWriter.write("\n" + engine.getThrust());
+                        fileWriter.write("\n" + engine.getFuelConsumptionRate());
+                    }
                 }
+                fileWriter.close();
 
-                // fuelCapacity for FUELTANK
-                if(part instanceof FuelTank) {
-                    FuelTank fuelTank = (FuelTank) part;
-                    fileWriter.write("\n" + fuelTank.getFuelCapacity());
-                }
-                //thrust and consumption for ENGINE
-                if(part instanceof Engine) {
-                    Engine engine = (Engine) part;
-                    fileWriter.write("\n" + engine.getThrust());
-                    fileWriter.write("\n" + engine.getFuelConsumptionRate());
-                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            fileWriter.close();
-
-        } catch(Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -100,7 +105,8 @@ public class Saves {
                 // get name
                 String name = sc.nextLine();
                 System.out.println(name);
-                sc.nextLine();
+                name = sc.nextLine();
+                System.out.println(name);
                 // get type
                 String type = sc.nextLine();
                 System.out.println(type);

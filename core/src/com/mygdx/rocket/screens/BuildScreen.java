@@ -5,16 +5,23 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.*;
 //import com.jogamp.opengl.FBObject;
 import com.mygdx.rocket.Rocket;
@@ -24,6 +31,7 @@ import com.mygdx.rocket.RocketFlight;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class BuildScreen implements Screen {
 
@@ -33,7 +41,6 @@ public class BuildScreen implements Screen {
     private Skin skin;
     public BitmapFont font48;
     public BitmapFont font24W;
-
     private ShapeRenderer shapeRenderer;
 
     private PartSelector partSelector;
@@ -42,6 +49,12 @@ public class BuildScreen implements Screen {
     private int process = 1;
     private Vector2 location2 = null;
     private int direction2 = 0;
+    public static boolean warning = false;
+    public static float messageTime = 0;
+    public Label partLabel;
+    private Label warningLabel;
+    public Label.LabelStyle labelStyle;
+    private ArrayList<Texture> disposableTextures = new ArrayList<>();
 
 
     public BuildScreen(final RocketFlight app) {
@@ -141,18 +154,33 @@ public class BuildScreen implements Screen {
             }
         });
 
+        // create label
+        partLabel = new Label("", skin);
+        labelStyle = new Label.LabelStyle(partLabel.getStyle());
+        labelStyle.background = createSolidColorDrawable(Color.SKY);
+        partLabel.setStyle(labelStyle);
+        partLabel.setVisible(false);
+
+        warningLabel = new Label("", skin);
+        warningLabel.setPosition(RocketFlight.V_WIDTH / 2, RocketFlight.V_HEIGHT / 2); // Adjust as needed
+        warningLabel.setColor(Color.RED);
+        warningLabel.setVisible(false);
+        stage.addActor(warningLabel);
+
         // Add UI elements to the stage
         stage.addActor(mainMenuButton);
         stage.addActor(saveButton);
         stage.addActor(loadButton);
         stage.addActor(nextButton);
         stage.addActor(previousButton);
+        stage.addActor(partLabel);
     }
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0.05f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
 
         //shaperenderer begin
         shapeRenderer.setProjectionMatrix(app.camera.combined);
@@ -172,12 +200,61 @@ public class BuildScreen implements Screen {
         font48.draw(app.batch, partSelector.getSelectedCategory(), 50, 150);
         app.batch.end();
 
+        // draw labels if hovering over a part
+        float mouseX = Gdx.input.getX();
+        float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+
+        boolean isHoveringOverPart = false;
+        for (Part part : currentRocket.getParts()) {
+            if(part.getBounds().contains(mouseX, mouseY)) {
+                partLabel.setText(part.getName() + "\n" +
+                        "Type: " + part.getType() + "\n" +
+                        "Mass: " + part.getMass());
+                if(part.getType().equals("fuelTank")) {
+                    partLabel.setText(part.getName() + "\n" +
+                            "Type: " + part.getType() + "\n" +
+                            "Mass: " + part.getMass() + " tons" + "\n" +
+                            "Fuel Capacity: " + ((FuelTank) part).getFuelCapacity());
+                } else if (part.getType().equals("engine")) {
+                    partLabel.setText(part.getName() + "\n" +
+                            "Type: " + part.getType() + "\n" +
+                            "Mass: " + part.getMass() + " tons" + "\n" +
+                            "Thrust: " + ((Engine) part).getThrust() * 10 + "kN" + "\n" +
+                            "Fuel Efficiency: " + ((Engine) part).getFuelConsumptionRate() + " Tons per second");
+                }
+                partLabel.pack();
+                partLabel.setPosition(mouseX, mouseY);
+                partLabel.setVisible(true);
+                partLabel.toFront();
+                isHoveringOverPart = true;
+                break;
+            }
+        }
+
+        if (!isHoveringOverPart) {
+            partLabel.setVisible(false);
+        }
+
+        // draw and update rocket
+        currentRocket.draw(shapeRenderer, app.batch, stage);
+        if(warning && messageTime > 0) {
+            displayWarning();
+            messageTime -= delta;
+        }
+
         // Stage elements
         stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
         stage.draw();
 
-        // draw and update rocket
-        currentRocket.draw(shapeRenderer, app.batch, stage);
+
+//        // draw bounds of each part (testing)
+//        shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+//        shapeRenderer.setColor(Color.RED);
+//        for (Part part : currentRocket.getParts()) {
+//            Rectangle bounds = part.getBounds();
+//            shapeRenderer.rect(bounds.x, bounds.y, bounds.width, bounds.height);
+//        }
+//        shapeRenderer.end();
 
         if(partSelector.getSelectedPart() != null && currentRocket.getParts().isEmpty()) { // if Rocket is empty
             boolean clicked = false;
@@ -282,6 +359,7 @@ public class BuildScreen implements Screen {
                     point.setPart(currentP);
                 }
                 currentRocket.addPart(currentP);
+
                 partSelector.setSelectedPart(null);
                 process = 1;
             }
@@ -313,7 +391,12 @@ public class BuildScreen implements Screen {
     public void dispose() {
         font48.dispose();
         stage.dispose();
+        skin.dispose();
         shapeRenderer.dispose();
+
+        for(Texture texture : disposableTextures) {
+            texture.dispose();
+        }
     }
 
     public void showDialog() {
@@ -417,6 +500,60 @@ public class BuildScreen implements Screen {
                 dialog.hide();
             }
         });
+    }
+
+    private Drawable createSolidColorDrawable(Color color) {
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(color);
+        pixmap.fill();
+        Texture texture = new Texture(pixmap);
+        disposableTextures.add(texture);
+        pixmap.dispose();
+        return new TextureRegionDrawable(new TextureRegion(texture));
+    }
+
+    void placePart(Part newPart) {
+        for (Part existingPart : currentRocket.getParts()) {
+            if (newPart.overlaps(existingPart)) {
+                // Calculate overlap area
+                float overlap = newPart.overlapArea(existingPart);
+
+                // Check for invalid placement
+                if (overlap > 10) {
+                    // Remove the part and show warning
+                    currentRocket.getParts().pop();
+                    warningLabel.setText("Invalid Placement!");
+                    warningLabel.setVisible(true);
+                    Timer.schedule(new Timer.Task() {
+                        @Override
+                        public void run() {
+                            warningLabel.setVisible(false);
+                        }
+                    }, 2); // This will hide the label after 2 seconds
+                    return;
+                }
+
+                // Mark attachment points
+                for (AttachmentPoint point : currentRocket.getAttachmentPoints()) {
+                    for(Part part : currentRocket.getParts()) {
+                        if (point.isInside(part.getBounds())) {
+                            point.setOccupied(true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void displayWarning() {
+        app.batch.begin();
+        font24W.draw(app.batch, "Rocket must have at least one capsule!", RocketFlight.V_WIDTH / 2, RocketFlight.V_HEIGHT / 2);
+        app.batch.end();
+    }
+
+    public static void setWarning() {
+        warning = true;
+        messageTime = 2.0f;
     }
 
 }

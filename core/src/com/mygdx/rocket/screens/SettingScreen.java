@@ -95,8 +95,8 @@ public class SettingScreen implements Screen {
         font48.draw(app.batch, "SOUND", RocketFlight.V_WIDTH / 2 - 400, RocketFlight.V_HEIGHT - 70);
         font48.draw(app.batch, "MUSIC", RocketFlight.V_WIDTH / 2 - 400, RocketFlight.V_HEIGHT - 170);
 
-        float soundValue = soundSlider.getValue();
-        float musicValue = musicSlider.getValue();
+        soundValue = soundSlider.getValue();
+        musicValue = musicSlider.getValue();
         font24.draw(app.batch, "Sound Value: " + soundValue + "%", RocketFlight.V_WIDTH / 2 - 100, RocketFlight.V_HEIGHT - 100);
         font24.draw(app.batch, "Music Value: " + musicValue + "%", RocketFlight.V_WIDTH / 2 - 100, RocketFlight.V_HEIGHT - 200);
 

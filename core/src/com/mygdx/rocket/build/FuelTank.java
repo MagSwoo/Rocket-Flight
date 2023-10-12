@@ -10,6 +10,11 @@ public class FuelTank extends Part{
     private float fuelCapacity;
     private float currentFuel;
 
+    @Override
+    public float getMass() {
+        return 0.9f * super.getMass() * getCurrentFuel()/getFuelCapacity() + 0.1f * super.getMass();
+    }
+
     public FuelTank(String name, float mass, Vector2 size, Array<AttachmentPoint> attachmentPoints, float fuelCapacity) {
         super(name, mass, size, attachmentPoints);
         this.fuelCapacity = fuelCapacity;

@@ -1,5 +1,6 @@
 package com.mygdx.rocket.build;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class AttachmentPoint {
@@ -74,5 +75,9 @@ public class AttachmentPoint {
 
     public Part getPart() {
         return part;
+    }
+
+    public boolean isInside(Rectangle rect) {
+        return rect.contains(position);
     }
 }
